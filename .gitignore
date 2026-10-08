@@ -1,0 +1,20 @@
+# Generated release files belong on GitHub Releases, not in source history.
+/dist/
+*.luac
+luac.out
+__pycache__/
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+# Never publish client settings, account data, logs or credentials.
+WTF/
+SavedVariables/
+*.log
+*.lua.bak
+.env
+.env.*
+*.pem
+*.key
+*.sql
+*.sql.gz
