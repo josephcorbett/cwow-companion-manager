@@ -10,7 +10,7 @@ source = ROOT / ADDON
 manifest = source / (ADDON + ".toc")
 entries = [line.strip() for line in manifest.read_text().splitlines()
            if line.strip() and not line.startswith("#")]
-expected = ["Shared.lua", "Transport.lua", "Party.lua", "Manager.lua", "UI.lua", "Core.lua"]
+expected = ["Shared.lua", "Factions.lua", "Transport.lua", "Party.lua", "Manager.lua", "UI.lua", "Core.lua"]
 if entries != expected:
     raise SystemExit("Manifest differs from the reviewed release allowlist.")
 files = [(manifest, manifest.name)] + [(source / name, name) for name in entries]

@@ -417,4 +417,88 @@ test("invalid launcher preferences fall back safely", function()
         equal(w.C.db.minimapAngle, 225); check(w.C.UI.launcher)
     end
 end)
+test("login faction survives switching characters without opening the window", function()
+    local w = new()
+    w.player.name, w.player.guid, w.player.faction = "Elm", "ELM-GUID", "Horde"
+    w.load()
+    equal(w.C.Factions.Get("elm"), "Horde"); equal(#w.sent, 0)
+    local saved = w.C.db
+    local other = new(saved); other.load()
+    equal(other.C.Factions.Get("Elm"), "Horde")
+    equal(other.C.Factions.Get("Tester"), "Alliance")
+    equal(other.C.Factions.Get("Neverseen"), nil); equal(#other.sent, 0)
+    other.C.UI.Create(); other.refresh("-Elm Druid, -Neverseen Mage")
+    equal(other.C.UI.alts.rows[1].faction.text, "Horde")
+    equal(other.C.UI.alts.rows[2].faction.text, "Faction unknown")
+    -- Faction cache does not create active bots or authorize destructive actions.
+    equal(#other.C.Manager.ActiveRows(), 0)
+    other.dismiss("Elm"); equal(#other.kicks, 0)
+end)
+test("party observation is learned after a roster match and retained on departure", function()
+    local w = ready()
+    local companion, human = w.bot("Aster"), w.bot("Human")
+    companion.faction, human.faction = "Alliance", "Horde"
+    w.group(companion, human)
+    equal(w.C.Factions.Get("Aster"), nil)
+    w.refresh("+Aster Priest")
+    equal(w.C.Factions.Get("Aster"), "Alliance")
+    equal(w.C.Factions.Get("Human"), nil)
+    w.group(); equal(w.C.Factions.Get("Aster"), "Alliance")
+    local other = new(w.C.db); other.load()
+    equal(other.C.Factions.Get("Aster"), "Alliance")
+end)
+test("cached roster characters joining later learn their own faction", function()
+    local w = ready()
+    w.refresh("+Aster Priest")
+    local companion = w.bot("Aster"); companion.faction = "Horde"
+    w.group(companion)
+    equal(w.C.Factions.Get("Aster"), "Horde")
+    equal(w.C.Factions.Get("Tester"), "Alliance")
+end)
+test("faction cache is isolated by realm", function()
+    local w = ready()
+    local saved = w.C.db
+    local other = new(saved); other.realm = "Other Realm"; other.player.faction = "Horde"; other.load()
+    equal(other.C.Factions.Get("Tester"), "Horde")
+    equal(other.C.db.factions["Test Realm"].tester.faction, "Alliance")
+    other.realm = "Test Realm"; equal(other.C.Factions.Get("Tester"), "Alliance")
+end)
+test("missing or offline unit information never invents faction", function()
+    local w = ready()
+    local companion = w.bot("Aster")
+    w.group(companion); w.refresh("+Aster Priest")
+    equal(w.C.Factions.Get("Aster"), nil)
+    companion.faction, companion.connected = "Horde", false
+    w.event("UNIT_FACTION", "party1"); equal(w.C.Factions.Get("Aster"), nil)
+    companion.connected = true
+    w.event("UNIT_FACTION", "party1"); equal(w.C.Factions.Get("Aster"), "Horde")
+    companion.faction = nil
+    w.event("UNIT_FACTION", "party1"); equal(w.C.Factions.Get("Aster"), "Horde")
+    companion.guid = "NEW-ASTER-GUID"
+    w.event("UNIT_NAME_UPDATE", "party1"); equal(w.C.Factions.Get("Aster"), nil)
+    companion.faction = "Alliance"
+    w.event("UNIT_FACTION", "party1"); equal(w.C.Factions.Get("Aster"), "Alliance")
+end)
+test("new direct observations replace old faction values", function()
+    local w = ready()
+    w.player.faction = "Horde"
+    w.event("UNIT_FACTION", "player")
+    equal(w.C.Factions.Get("Tester"), "Horde")
+    equal(w.C.db.factions["Test Realm"].tester.guid, "PLAYER-GUID")
+    equal(#w.sent, 0)
+end)
+test("foreign-realm units and invalid cache records are rejected", function()
+    local w = new({factions = {["Test Realm"] = {
+        aster = {faction = "Neutral", guid = "ASTER-GUID"},
+        other = {faction = "Horde"}, broken = "invalid", ["*"] = {faction = "Horde", guid = "G"}
+    }, [42] = {}}})
+    w.load()
+    equal(w.C.Factions.Get("Aster"), nil); equal(w.C.Factions.Get("Other"), nil)
+    equal(w.C.db.factions[42], nil); equal(w.C.db.factions["Test Realm"]["*"], nil)
+    w.refresh("+Aster Priest")
+    local companion = w.bot("Aster"); companion.realm, companion.faction = "Foreign Realm", "Horde"
+    w.group(companion); equal(w.C.Factions.Get("Aster"), nil)
+    SlashCmdList.CWOWCOMPANIONMANAGER("reset")
+    equal(w.C.Factions.Get("Tester"), "Alliance")
+end)
 print(string.format("PASS: %d cases, %d assertions on %s. Live-client testing remains required.", cases, assertions, _VERSION))

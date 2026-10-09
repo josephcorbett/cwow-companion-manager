@@ -1,6 +1,6 @@
-# Live-client acceptance checklist — v0.1.2 beta
+# Live-client acceptance checklist — v0.1.3 beta
 
-**Partial live feedback:** v0.1.0 successfully recruited an alt but hit a blocked dismissal action. The v0.1.2 fix and full checklist remain to be validated. Passing Lua tests is not a substitute. Use a normal player account as well as any administrator account used for comparison. Record client build, locale, UI scale, addon version, server/module revisions if available, initial party state and the result of each case. Do not include account names, credentials or private connection details in public reports.
+**Partial live feedback:** the project owner confirmed the minimap launcher and corrected dismissal behavior work. Faction caching and the broader checklist remain to be validated. Passing Lua tests is not a substitute. Use a normal player account as well as any administrator account used for comparison. Record client build, locale, UI scale, addon version, server/module revisions if available, initial party state and the result of each case. Do not include account names, credentials or private connection details in public reports.
 
 ## 1. Install and initialize
 
@@ -54,4 +54,14 @@
 4. Turn debug off; normal operation should be quiet and the setting should persist.
 5. Record each case as **passed**, **failed with evidence**, or **not tested**. Note real party state separately from response wording. File sanitized issues and attach real screenshots if available.
 
-After these tests pass on the intended client/server pair, a follow-up release can update validation claims. Until then, keep v0.1.2 marked as a prerelease.
+After these tests pass on the intended client/server pair, a follow-up release can update validation claims. Until then, keep v0.1.3 marked as a prerelease.
+
+
+## 6. Faction cache
+
+1. Log into an opposite-faction alt with the addon enabled, without opening the window. Log out normally and return to the main character on the same realm/account/client. Open the Alts tab: the cached alt should display its actual faction.
+2. Invite an eligible roster alt whose faction has not been learned. Once it joins and unit data is available, verify the faction shown. Dismiss it, reload, and confirm the faction remains while activation and party status are re-queried.
+3. An unseen character must show Faction unknown. Failed party joins, greetings, and ordinary chat must not invent faction. A human absent from the server roster must not acquire bot-management controls.
+4. Check that the same character name on a different realm does not reuse the first realm's faction. Verify missing/disconnected unit information does not overwrite a known faction with a guess.
+5. Verify the new faction column fits both lists at normal and smaller UI scales. Confirm minimap, recruitment and dismissal still behave as before.
+6. Inspect SavedVariables only locally: preferences and the faction cache should persist, but no authoritative active-roster/group snapshot should be saved. Avoid publishing these character details in bug reports.

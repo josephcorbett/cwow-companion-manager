@@ -2,10 +2,11 @@
 ## Title: CWoW Companion Manager
 ## Notes: Recruit and dismiss Playerbots companions through AzerothCore.
 ## Author: CWoW Companion Manager contributors
-## Version: 0.1.2
+## Version: 0.1.3
 ## SavedVariables: CWoWCompanionManagerDB
 
 Shared.lua
+Factions.lua
 Transport.lua
 Party.lua
 Manager.lua

@@ -3,6 +3,7 @@ local P = {members = {}, complete = false, revision = 0, eventSerial = 0}
 C.Party = P
 
 function P.Scan(fromRosterEvent)
+    C.Factions.Observe("player")
     if fromRosterEvent then P.eventSerial = P.eventSerial + 1 end
     local members, complete, signature = {}, true, {}
     local raid, count = GetNumRaidMembers() > 0, GetNumPartyMembers()
@@ -19,6 +20,11 @@ function P.Scan(fromRosterEvent)
                 if members[key] then complete = false end
                 members[key] = {key = key, name = name, guid = guid, class = class, token = token,
                     connected = UnitIsConnected(unit) and true or false}
+                -- A roster match selects which companions to remember, but faction
+                -- comes only from the actual unit API, never from party membership.
+                if C.Manager and C.Manager.rosterValid and C.Manager.roster[key] then
+                    C.Factions.Observe(unit)
+                end
                 signature[#signature + 1] = key .. ":" .. guid .. ":" .. tostring(token)
             end
         end

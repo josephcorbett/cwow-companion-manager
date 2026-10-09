@@ -1,7 +1,7 @@
 -- Explicit mock with a hardware-input boundary; not the real WoW security system or renderer.
 local function new(saved)
     local W = {time = 0, party = {}, leader = true, combat = false, raid = false,
-        sent = {}, kicks = {}, frames = {}, chat = {}, menu = {}}
+        sent = {}, kicks = {}, frames = {}, chat = {}, menu = {}, realm = "Test Realm"}
     CWoWCompanionManagerDB = saved
     SlashCmdList, UISpecialFrames, RAID_CLASS_COLORS = {}, {}, {PRIEST = {r = 1, g = 1, b = 1}}
     UNKNOWN, UNKNOWNOBJECT = "Unknown", "Unknown Object"
@@ -66,13 +66,16 @@ local function new(saved)
     function GetNumRaidMembers() return W.raid and #W.party or 0 end
     function IsPartyLeader() return W.leader end
     function InCombatLockdown() return W.combat end
-    local player = {name = "Tester", guid = "PLAYER-GUID", class = "Mage", token = "MAGE", connected = true}
+    local player = {name = "Tester", guid = "PLAYER-GUID", class = "Mage", token = "MAGE", connected = true, faction = "Alliance"}
+    W.player = player
+    function GetRealmName() return W.realm end
     local function member(unit)
         if unit == "player" then return player end
         local index = tonumber(unit:match("%d+$"))
         return index and W.party[index]
     end
-    function UnitName(unit) local m = member(unit); return m and m.name end
+    function UnitName(unit) local m = member(unit); return m and m.name, m and m.realm end
+    function UnitFactionGroup(unit) local m = member(unit); return m and m.faction end
     function UnitGUID(unit) local m = member(unit); return m and m.guid end
     function UnitClass(unit) local m = member(unit); return m and m.class, m and m.token end
     function UnitIsConnected(unit) local m = member(unit); return m and m.connected end
@@ -86,7 +89,7 @@ local function new(saved)
         if W.kickError then error("mock protected action error") end
         W.kicks[#W.kicks + 1] = name
     end
-    for _, file in ipairs({"Shared", "Transport", "Party", "Manager", "UI", "Core"}) do
+    for _, file in ipairs({"Shared", "Factions", "Transport", "Party", "Manager", "UI", "Core"}) do
         dofile("CWoWCompanionManager/" .. file .. ".lua")
     end
     W.C = CWoWCompanionManager

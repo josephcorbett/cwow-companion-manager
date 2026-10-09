@@ -9,6 +9,7 @@ local points = {CENTER = true, TOP = true, BOTTOM = true, LEFT = true, RIGHT = t
 local function loadPreferences()
     local saved = type(CWoWCompanionManagerDB) == "table" and CWoWCompanionManagerDB or {}
     local db = {tab = saved.tab == "alts" and "alts" or "mercenaries", debug = saved.debug == true}
+    db.factions = C.Factions.Load(saved.factions)
     db.minimapAngle = type(saved.minimapAngle) == "number" and saved.minimapAngle == saved.minimapAngle
         and math.abs(saved.minimapAngle) < 100000 and saved.minimapAngle % 360 or 225
     local p = saved.position
@@ -71,7 +72,7 @@ end)
 for _, event in ipairs({"ADDON_LOADED", "PLAYER_ENTERING_WORLD", "PLAYER_LEAVING_WORLD", "CHAT_MSG_ADDON",
     "CHAT_MSG_SYSTEM", "UI_ERROR_MESSAGE", "ADDON_ACTION_BLOCKED", "ADDON_ACTION_FORBIDDEN",
     "PARTY_MEMBERS_CHANGED", "RAID_ROSTER_UPDATE",
-    "PARTY_LEADER_CHANGED", "UNIT_NAME_UPDATE", "PLAYER_REGEN_ENABLED",
+    "PARTY_LEADER_CHANGED", "UNIT_NAME_UPDATE", "UNIT_FACTION", "PLAYER_REGEN_ENABLED",
     "PLAYER_REGEN_DISABLED", "DISPLAY_SIZE_CHANGED"}) do
     local ok, err = pcall(events.RegisterEvent, events, event)
     if not ok then C.Debug("Event unavailable: " .. event .. " " .. tostring(err)) end

@@ -4,13 +4,13 @@ A small companion-management addon for **World of Warcraft 3.3.5a (interface 303
 
 Recruit a Mercenary by class, activate an existing character from the server roster, and dismiss identified bots from one Active Companions list. The addon uses AzerothCore's existing addon-message command channel; it requires no custom server module or external addon framework.
 
-**v0.1.2 is a beta with a minimap launcher and the previous dismissal hotfix.** Its diagnostic predecessor's transport, roster parsing, bot removal and party APIs were reported as successfully tested in game. An initial production-client test reported successful alt recruitment and a blocked dismissal action in v0.1.0. This update moves party removal back onto the button click; that fix, full workflow coverage, and behavior on other server revisions still need the [manual test checklist](docs/MANUAL_TESTS.md). Local tests use mocks and do not establish gameplay compatibility. Real screenshots will be added after in-game validation.
+**v0.1.3 adds cached faction information.** Its diagnostic predecessor's transport, roster parsing, bot removal and party APIs were reported as successfully tested in game. The project owner has confirmed the minimap launcher and corrected dismissal behavior in game. Faction caching, broader workflow coverage, and behavior on other server revisions still need the [manual test checklist](docs/MANUAL_TESTS.md). Local tests use mocks and do not establish gameplay compatibility. Real screenshots will be added after in-game validation.
 
 ## Features
 
 - A movable 800 × 450 window using Blizzard textures and buttons, gold accents and class colors, with automatic scaling to smaller UI areas.
 - Mercenary recruitment for Warrior, Paladin, Hunter, Rogue, Priest, Death Knight, Shaman, Mage, Warlock and Druid.
-- An Alts tab with roster status and one-step Invite for inactive entries.
+- An Alts tab with roster status, remembered faction and one-step Invite for inactive entries.
 - A unified, scrollable Active Companions list, including disconnected bots and active bots outside the party.
 - One-click dismissal: verify the bot, remove it from the party, observe removal, deactivate it, then verify the result.
 - Roster refresh when opening, after relevant group changes while open, and during operation verification; manual Refresh is always available when idle.
@@ -29,7 +29,7 @@ The addon never creates characters, manages the server pool, changes server conf
 
 ## Installation
 
-1. Download **`CWoWCompanionManager.zip`** from the [v0.1.2 prerelease](https://github.com/josephcorbett/cwow-companion-manager/releases/tag/v0.1.2) or a newer compatible release. Use the addon asset rather than GitHub's automatic “Source code” archive.
+1. Download **`CWoWCompanionManager.zip`** from the [v0.1.3 prerelease](https://github.com/josephcorbett/cwow-companion-manager/releases/tag/v0.1.3) or a newer compatible release. Use the addon asset rather than GitHub's automatic “Source code” archive.
 2. Exit WoW and extract the ZIP into the client's `Interface/AddOns/` directory.
 3. Check that the manifest is directly at:
 
@@ -41,7 +41,7 @@ The addon never creates characters, manages the server pool, changes server conf
 
 For Linux/Wine, use the directory containing the `Wow.exe` your Wine/Lutris/Bottles launcher actually runs. Linux filenames are case-sensitive. Do not install into a Retail client or introduce another directory above `CWoWCompanionManager`. Restart the client after first installation; `/reload` is enough for subsequent source updates.
 
-The release contains the manifest and `Shared.lua`, `Transport.lua`, `Party.lua`, `Manager.lua`, `UI.lua`, and `Core.lua`, plus documentation and the MIT license. Only preferences are saved in `CWoWCompanionManagerDB`.
+The release contains the manifest and `Shared.lua`, `Factions.lua`, `Transport.lua`, `Party.lua`, `Manager.lua`, `UI.lua`, and `Core.lua`, plus documentation and the MIT license. Preferences and last-observed character factions are saved in `CWoWCompanionManagerDB`; active roster and group state are never persisted.
 
 ## Usage
 
@@ -57,7 +57,20 @@ The release contains the manifest and `Shared.lua`, `Transport.lua`, `Party.lua`
 
 **Refresh and debug:** the Refresh button or `/cwow refresh` issues a read-only roster query when idle. `/cwow debug` toggles protocol diagnostics in the normal chat frame, off by default. The preference is saved. Debug may show character names and server messages; review logs before sharing them. Normal use is quiet, and the addon never filters the game's normal chat output.
 
-**Upgrading from v0.1.0 or v0.1.1:** replace the addon folder with the v0.1.2 files, type `/reload`, then `/cwow`. Click Refresh, wait for completion, and test Dismiss while out of combat and party leader. If asked, click Dismiss again after the identity refresh. If WoW still blocks removal, enable `/cwow debug` and retain the reported action name; do not keep repeating the command blindly.
+**Upgrading from an earlier version:** exit WoW, replace the addon folder with the v0.1.3 files (including the new `Factions.lua`), restart the client, then type `/cwow`. Click Refresh, wait for completion, and test Dismiss while out of combat and party leader. If asked, click Dismiss again after the identity refresh. If WoW still blocks removal, enable `/cwow debug` and retain the reported action name; do not keep repeating the command blindly.
+
+## Remembered faction
+
+The addon learns Alliance or Horde in two ways, without sending any extra server commands:
+
+- Log into a character with Companion Manager enabled. The window does not need to be open.
+- Bring a character returned by the server roster into your party. Once its connected unit data is available, the addon records its actual faction through `UnitFactionGroup`.
+
+Faction appears in both character lists. A character not yet observed shows **Faction unknown**. To learn an opposite-faction alt that cannot join your main's party, log into that alt once, then log out normally and return to your main.
+
+The cache is shared between characters on the **same WoW account and client installation**, with separate entries per realm. WoW writes SavedVariables on normal logout or reload; a crash can lose unsaved observations. Other accounts or installations have their own cache. The stored fields are faction and GUID, indexed by realm and character name. These local character details should not be included in public bug reports.
+
+New direct observations update the cached faction. Observing a different GUID for the same name invalidates the old entry. An unseen rename, faction change, or recreated character can still leave old information until observed again. Cached faction is informational: it does not identify bots, prove ownership, or automatically block cross-faction activation on servers that support it. Failed invitations and ordinary whispers never supply faction evidence.
 
 ## Bot identity and roster ambiguity
 
@@ -69,7 +82,7 @@ Recruitment attribution requires the expected Playerbots response, a subsequent 
 
 ## Technical architecture
 
-`Shared.lua` contains validation, class tokens and the roster parser adapted from CWoWBotDiagnostics. `Transport.lua` implements its proven protocol framing: `SendAddonMessage("AzerothCore", "i" .. fourDigitID .. command, "WHISPER", UnitName("player"))`. Commands contain no leading dot. Responses arrive through `CHAT_MSG_ADDON` as `a` (ACK), `m` (text), `o` (handler OK), or `f` (handler failure). Prefix, ID, channel and sender must match. Counters are not reused within a UI session.
+`Shared.lua` contains validation, class tokens and the roster parser adapted from CWoWBotDiagnostics. `Factions.lua` validates and stores direct unit-faction observations independently of bot identity and active state. `Transport.lua` implements its proven protocol framing: `SendAddonMessage("AzerothCore", "i" .. fourDigitID .. command, "WHISPER", UnitName("player"))`. Commands contain no leading dot. Responses arrive through `CHAT_MSG_ADDON` as `a` (ACK), `m` (text), `o` (handler OK), or `f` (handler failure). Prefix, ID, channel and sender must match. Counters are not reused within a UI session.
 
 `Party.lua` reads the legacy `GetNumPartyMembers`, `GetNumRaidMembers`, and `Unit*` APIs. `Manager.lua` serializes requests and gameplay operations. `UI.lua` uses legacy Blizzard frames/dropdown templates; `Core.lua` owns events, slash commands and preference initialization. No command is sent on addon load. Opening before entering the world defers the roster query until the player is ready.
 

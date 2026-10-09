@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.1.3 — 2026-10-09 (beta)
+
+- Cache the logged-in character's observed faction and learn roster characters' factions when their party unit data becomes available.
+- Preserve faction observations between characters on the same local WoW account, separated by realm and guarded by observed GUID identity.
+- Display Alliance, Horde or Faction unknown in both character lists. Refresh cached values when directly observed; never infer faction from failed joins or greetings.
+- Keep faction knowledge separate from bot identity, ownership and invitation eligibility.
+- Lua 5.1 validation: 46 cases and 299 assertions pass; live faction-cache persistence and column layout still need testing.
+
 ## v0.1.2 — 2026-10-09 (beta)
 
 - Add a dependency-free minimap launcher: left-click to toggle the window, drag around the rim, and retain position across sessions.
