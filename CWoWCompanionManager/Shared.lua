@@ -1,4 +1,4 @@
-CWoWCompanionManager = {version = "0.1.1"}
+CWoWCompanionManager = {version = "0.1.2"}
 local C = CWoWCompanionManager
 C.classes = {
     {name = "Warrior", token = "WARRIOR", command = "warrior"},

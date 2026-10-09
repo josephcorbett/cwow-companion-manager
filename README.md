@@ -4,7 +4,7 @@ A small companion-management addon for **World of Warcraft 3.3.5a (interface 303
 
 Recruit a Mercenary by class, activate an existing character from the server roster, and dismiss identified bots from one Active Companions list. The addon uses AzerothCore's existing addon-message command channel; it requires no custom server module or external addon framework.
 
-**v0.1.1 is a beta with a dismissal hotfix.** Its diagnostic predecessor's transport, roster parsing, bot removal and party APIs were reported as successfully tested in game. An initial production-client test reported successful alt recruitment and a blocked dismissal action in v0.1.0. This update moves party removal back onto the button click; that fix, full workflow coverage, and behavior on other server revisions still need the [manual test checklist](docs/MANUAL_TESTS.md). Local tests use mocks and do not establish gameplay compatibility. Real screenshots will be added after in-game validation.
+**v0.1.2 is a beta with a minimap launcher and the previous dismissal hotfix.** Its diagnostic predecessor's transport, roster parsing, bot removal and party APIs were reported as successfully tested in game. An initial production-client test reported successful alt recruitment and a blocked dismissal action in v0.1.0. This update moves party removal back onto the button click; that fix, full workflow coverage, and behavior on other server revisions still need the [manual test checklist](docs/MANUAL_TESTS.md). Local tests use mocks and do not establish gameplay compatibility. Real screenshots will be added after in-game validation.
 
 ## Features
 
@@ -15,7 +15,7 @@ Recruit a Mercenary by class, activate an existing character from the server ros
 - One-click dismissal: verify the bot, remove it from the party, observe removal, deactivate it, then verify the result.
 - Roster refresh when opening, after relevant group changes while open, and during operation verification; manual Refresh is always available when idle.
 - Clear pending, success, error and uncertain-result feedback, with optional debug output.
-- Saved window position and selected tab; no persistent roster or bot-identity cache.
+- Saved window position, selected tab and movable minimap launcher; no persistent roster or bot-identity cache.
 
 ## Requirements
 
@@ -29,7 +29,7 @@ The addon never creates characters, manages the server pool, changes server conf
 
 ## Installation
 
-1. Download **`CWoWCompanionManager.zip`** from the [v0.1.1 prerelease](https://github.com/josephcorbett/cwow-companion-manager/releases/tag/v0.1.1) or a newer compatible release. Use the addon asset rather than GitHub's automatic “Source code” archive.
+1. Download **`CWoWCompanionManager.zip`** from the [v0.1.2 prerelease](https://github.com/josephcorbett/cwow-companion-manager/releases/tag/v0.1.2) or a newer compatible release. Use the addon asset rather than GitHub's automatic “Source code” archive.
 2. Exit WoW and extract the ZIP into the client's `Interface/AddOns/` directory.
 3. Check that the manifest is directly at:
 
@@ -45,7 +45,7 @@ The release contains the manifest and `Shared.lua`, `Transport.lua`, `Party.lua`
 
 ## Usage
 
-**Open and position:** type `/cwow`, drag the window background, and close it with Escape or the close button. Position and recruitment tab survive reloads. `/cwow reset` centers the window if necessary. A minimap button is intentionally omitted.
+**Open and position:** type `/cwow`, drag the window background, and close it with Escape or the close button. Position and recruitment tab survive reloads. `/cwow reset` centers the window if necessary. Left-click the minimap button to open or close the window. Drag it around the rim to reposition it; its position is saved. `/cwow reset` also returns the launcher to its default location. No action-bar slot is required.
 
 **Recruit a Mercenary:** select the Mercenaries tab, choose a class, and click Recruit once. Wait for the result. The server chooses the character; unavailable-class feedback does not imply that another player is necessarily using it.
 
@@ -57,7 +57,7 @@ The release contains the manifest and `Shared.lua`, `Transport.lua`, `Party.lua`
 
 **Refresh and debug:** the Refresh button or `/cwow refresh` issues a read-only roster query when idle. `/cwow debug` toggles protocol diagnostics in the normal chat frame, off by default. The preference is saved. Debug may show character names and server messages; review logs before sharing them. Normal use is quiet, and the addon never filters the game's normal chat output.
 
-**Upgrading from v0.1.0:** replace the addon folder with the v0.1.1 files, type `/reload`, then `/cwow`. Click Refresh, wait for completion, and test Dismiss while out of combat and party leader. If asked, click Dismiss again after the identity refresh. If WoW still blocks removal, enable `/cwow debug` and retain the reported action name; do not keep repeating the command blindly.
+**Upgrading from v0.1.0 or v0.1.1:** replace the addon folder with the v0.1.2 files, type `/reload`, then `/cwow`. Click Refresh, wait for completion, and test Dismiss while out of combat and party leader. If asked, click Dismiss again after the identity refresh. If WoW still blocks removal, enable `/cwow debug` and retain the reported action name; do not keep repeating the command blindly.
 
 ## Bot identity and roster ambiguity
 

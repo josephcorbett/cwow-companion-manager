@@ -9,7 +9,8 @@ local function new(saved)
     local methods = {}
     for _, method in ipairs({"SetFrameStrata", "SetMovable", "SetClampedToScreen", "EnableMouse",
         "RegisterForDrag", "SetBackdrop", "SetBackdropColor", "SetBackdropBorderColor", "SetJustifyH",
-        "SetJustifyV", "EnableMouseWheel", "SetTextColor", "StartMoving", "StopMovingOrSizing"}) do
+        "SetJustifyV", "EnableMouseWheel", "SetTextColor", "StartMoving", "StopMovingOrSizing",
+        "RegisterForClicks", "SetTexCoord", "SetHighlightTexture", "SetOwner", "AddLine"}) do
         methods[method] = function() end
     end
     function methods:SetSize(w, h) self.width, self.height = w, h end
@@ -30,6 +31,16 @@ local function new(saved)
     function methods:IsShown() return self.shown end
     function methods:Enable() self.enabled = true end
     function methods:Disable() self.enabled = false end
+    function methods:SetFrameLevel(level) self.level = level end
+    function methods:GetFrameLevel() return self.level or 1 end
+    function methods:GetEffectiveScale() return self.scale or 1 end
+    function methods:GetCenter() return 500, 400 end
+    function methods:CreateTexture() return CreateFrame("Texture") end
+    function methods:SetTexture(texture) self.texture = texture end
+    function methods:SetNormalTexture(texture)
+        self.normal = self:CreateTexture(); self.normal:SetTexture(texture)
+    end
+    function methods:GetNormalTexture() return self.normal end
     function methods:CreateFontString() return CreateFrame("FontString") end
     function CreateFrame(kind, name, parent)
         local frame = setmetatable({kind = kind, name = name, parent = parent, scripts = {},
@@ -40,6 +51,9 @@ local function new(saved)
     end
     UIParent = CreateFrame("Frame")
     UIParent:SetSize(1024, 768)
+    Minimap = CreateFrame("Frame"); Minimap:SetSize(140, 140)
+    GameTooltip = CreateFrame("GameTooltip")
+    function GetCursorPosition() return W.cursorX or 600, W.cursorY or 400 end
     DEFAULT_CHAT_FRAME = {AddMessage = function(_, s) W.chat[#W.chat + 1] = s end}
     function UIDropDownMenu_SetWidth(frame, width) frame.width = width end
     function UIDropDownMenu_Initialize(frame, fn) frame.initialize = fn end

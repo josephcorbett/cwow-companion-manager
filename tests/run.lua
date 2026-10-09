@@ -392,4 +392,29 @@ test("protected-action event stops dismissal without sending deactivation", func
         contains(w.C.status, "No deactivation was sent")
     end
 end)
+test("minimap launcher opens and closes quietly and persists drag position", function()
+    local w = ready()
+    local b = w.C.UI.launcher
+    check(b and b:IsShown()); equal(#w.sent, 0)
+    b.scripts.OnMouseDown(); b.scripts.OnClick()
+    check(w.C.UI.frame:IsShown()); equal(w.lastCommand(), "playerbots bot list")
+    w.roster("")
+    b.scripts.OnMouseDown(); b.scripts.OnClick(); check(not w.C.UI.frame:IsShown())
+    b.scripts.OnMouseDown(); b.scripts.OnDragStart()
+    w.cursorX, w.cursorY = 500, 500
+    b.scripts.OnUpdate(); b.scripts.OnDragStop()
+    equal(b.scripts.OnUpdate, nil); check(math.abs(w.C.db.minimapAngle - 90) < 0.001)
+    b.scripts.OnClick(); check(not w.C.UI.frame:IsShown())
+    b.scripts.OnMouseDown(); b.scripts.OnClick(); check(w.C.UI.frame:IsShown())
+    local saved = w.C.db
+    local restored = new(saved); restored.load()
+    equal(restored.C.db.minimapAngle, 90); equal(#restored.sent, 0)
+    SlashCmdList.CWOWCOMPANIONMANAGER("reset"); equal(restored.C.db.minimapAngle, 225)
+end)
+test("invalid launcher preferences fall back safely", function()
+    for _, bad in ipairs({"bad", math.huge, 0/0}) do
+        local w = new({minimapAngle = bad}); w.load()
+        equal(w.C.db.minimapAngle, 225); check(w.C.UI.launcher)
+    end
+end)
 print(string.format("PASS: %d cases, %d assertions on %s. Live-client testing remains required.", cases, assertions, _VERSION))

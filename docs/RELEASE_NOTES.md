@@ -1,12 +1,12 @@
-# CWoW Companion Manager v0.1.1 — dismissal hotfix (beta)
+# CWoW Companion Manager v0.1.2 — minimap launcher (beta)
 
-Fixes the asynchronous party-removal path behind a reported “Interface action failed because of an AddOn” message when dismissing a recruited alt.
+- Left-click the new minimap button to open or close Companion Manager.
+- Drag it around the minimap rim; position is saved between sessions.
+- `/cwow reset` restores the window and launcher positions.
+- No dependencies or action-bar slot required.
 
-- `UninviteUnit` now runs directly within the Dismiss button click, using recent roster evidence and current identity/permission checks.
-- If evidence is over 15 seconds old or the party composition changed, the first click only refreshes the roster and asks for another click. Server-response callbacks never uninvite.
-- Blocked/forbidden uninvite events stop dismissal without sending deactivation.
-- No automatic mutation retries; party removal is still observed before deactivation and final verification.
+Dismissal keeps the v0.1.1 flow: uninvite first, observe party removal, then deactivate. The proposed reversed two-click flow is not included.
 
-**Update:** download `CWoWCompanionManager.zip`, replace `Interface/AddOns/CWoWCompanionManager/`, then type `/reload` and `/cwow`. Click Refresh, wait for it to finish, and test Dismiss as party leader outside combat. If asked, click Dismiss again after refreshing.
+**Update:** download `CWoWCompanionManager.zip`, replace `Interface/AddOns/CWoWCompanionManager/`, then type `/reload`. Look for the launcher near the lower-left edge of the minimap. `/cwow` still works.
 
-**Validation:** Lua 5.1 syntax checks and 37 test cases / 246 assertions pass, including explicit hardware-event regression tests. The fix still needs validation in the actual WoW 3.3.5a client; mocks do not establish live compatibility. This remains a prerelease.
+**Validation:** Lua 5.1 syntax checks and 39 test cases / 264 assertions passed, including launcher click/drag/persistence checks and the existing dismissal regressions. Actual client rendering and gameplay still require in-game validation; this remains a prerelease.

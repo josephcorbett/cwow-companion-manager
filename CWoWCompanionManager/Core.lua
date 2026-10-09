@@ -9,6 +9,8 @@ local points = {CENTER = true, TOP = true, BOTTOM = true, LEFT = true, RIGHT = t
 local function loadPreferences()
     local saved = type(CWoWCompanionManagerDB) == "table" and CWoWCompanionManagerDB or {}
     local db = {tab = saved.tab == "alts" and "alts" or "mercenaries", debug = saved.debug == true}
+    db.minimapAngle = type(saved.minimapAngle) == "number" and saved.minimapAngle == saved.minimapAngle
+        and math.abs(saved.minimapAngle) < 100000 and saved.minimapAngle % 360 or 225
     local p = saved.position
     if type(p) == "table" and points[p.point] and points[p.relativePoint]
         and type(p.x) == "number" and type(p.y) == "number"
@@ -21,7 +23,7 @@ end
 
 events:SetScript("OnEvent", function(self, event, ...)
     if event == "ADDON_LOADED" then
-        if (...) == "CWoWCompanionManager" then loadPreferences() end
+        if (...) == "CWoWCompanionManager" then loadPreferences(); UI.CreateLauncher() end
     elseif event == "PLAYER_ENTERING_WORLD" then
         C.ready = true
         P.Scan()
@@ -42,7 +44,7 @@ events:SetScript("OnEvent", function(self, event, ...)
             C.Debug("UI error: " .. tostring(message))
             C.Status(tostring(message), "error")
         end
-    elseif event == "DISPLAY_SIZE_CHANGED" then UI.Fit()
+    elseif event == "DISPLAY_SIZE_CHANGED" then UI.Fit(); UI.PositionLauncher()
     elseif event == "PARTY_MEMBERS_CHANGED" or event == "RAID_ROSTER_UPDATE" then
         M.OnPartyChange(true)
         refreshAt = GetTime() + 0.4
@@ -82,7 +84,8 @@ SlashCmdList.CWOWCOMPANIONMANAGER = function(message)
         DEFAULT_CHAT_FRAME:AddMessage("CWoW Companion Manager debug " .. (C.db.debug and "enabled." or "disabled."))
     elseif command == "refresh" then M.Refresh(true)
     elseif command == "reset" and C.db then
-        C.db.position = nil
+        C.db.position, C.db.minimapAngle = nil, 225
+        UI.PositionLauncher()
         if UI.frame then UI.frame:ClearAllPoints(); UI.frame:SetPoint("CENTER"); UI.Fit() end
     else UI.Toggle() end
 end

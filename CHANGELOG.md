@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.2 — 2026-10-09 (beta)
+
+- Add a dependency-free minimap launcher: left-click to toggle the window, drag around the rim, and retain position across sessions.
+- Include launcher positioning in `/cwow reset` and validate saved coordinates.
+- Preserve v0.1.1 dismissal behavior: uninvite first, then deactivate after verified party removal.
+- Lua 5.1 validation: 39 cases and 264 assertions pass. Live launcher rendering remains to be checked in game.
+
 ## v0.1.1 — 2026-10-09 (beta hotfix)
 
 - Fix grouped dismissal calling `UninviteUnit` from an asynchronous server response, which loses the hardware-click context and can produce “Interface action failed because of an AddOn.”

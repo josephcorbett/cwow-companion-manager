@@ -1,6 +1,6 @@
-# Live-client acceptance checklist — v0.1.1 beta
+# Live-client acceptance checklist — v0.1.2 beta
 
-**Partial live feedback:** v0.1.0 successfully recruited an alt but hit a blocked dismissal action. The v0.1.1 fix and full checklist remain to be validated. Passing Lua tests is not a substitute. Use a normal player account as well as any administrator account used for comparison. Record client build, locale, UI scale, addon version, server/module revisions if available, initial party state and the result of each case. Do not include account names, credentials or private connection details in public reports.
+**Partial live feedback:** v0.1.0 successfully recruited an alt but hit a blocked dismissal action. The v0.1.2 fix and full checklist remain to be validated. Passing Lua tests is not a substitute. Use a normal player account as well as any administrator account used for comparison. Record client build, locale, UI scale, addon version, server/module revisions if available, initial party state and the result of each case. Do not include account names, credentials or private connection details in public reports.
 
 ## 1. Install and initialize
 
@@ -10,6 +10,8 @@
 4. Open `/cwow`. Verify a compact, readable Warcraft-style window with Active Companions above Mercenaries/Alts. The initial roster request should finish or show a useful timeout.
 5. Drag, close, reopen, reload and relog. Confirm window position and selected tab persist, but roster data is re-queried. Test `/cwow reset`.
 6. Check typical and small resolutions/UI scales, long names, every class choice, scrolling beyond four roster entries, keyboard Escape and the close button. No clipping or Lua errors should occur. Capture only real game screenshots.
+
+7. Verify the minimap launcher appears without issuing a roster query at login. Left-click to open and close, drag around the rim, and reload to confirm the position persists. A drag must not toggle the window. `/cwow reset` restores its default position. Check icon, tooltip, overlap with other minimap buttons and behavior at different UI scales.
 
 ## 2. Transport and roster
 
@@ -52,4 +54,4 @@
 4. Turn debug off; normal operation should be quiet and the setting should persist.
 5. Record each case as **passed**, **failed with evidence**, or **not tested**. Note real party state separately from response wording. File sanitized issues and attach real screenshots if available.
 
-After these tests pass on the intended client/server pair, a follow-up release can update validation claims. Until then, keep v0.1.1 marked as a prerelease.
+After these tests pass on the intended client/server pair, a follow-up release can update validation claims. Until then, keep v0.1.2 marked as a prerelease.

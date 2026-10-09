@@ -227,3 +227,60 @@ function UI.Toggle()
     UI.Render()
     if not M.Busy() then M.Refresh(true) end
 end
+
+
+-- Dependency-free launcher using textures shipped with the 3.3.5a client.
+function UI.PositionLauncher()
+    local b = UI.launcher
+    if not b or not C.db then return end
+    local angle = math.rad(C.db.minimapAngle or 225)
+    local radius = math.max(Minimap:GetWidth(), Minimap:GetHeight()) / 2 + 10
+    b:ClearAllPoints()
+    b:SetPoint("CENTER", Minimap, "CENTER", math.cos(angle) * radius, math.sin(angle) * radius)
+end
+
+function UI.CreateLauncher()
+    if UI.launcher or not C.db or not Minimap then return end
+    local b = CreateFrame("Button", "CWoWCompanionManagerMinimapButton", Minimap)
+    UI.launcher = b
+    b:SetSize(32, 32)
+    b:SetFrameStrata("MEDIUM")
+    b:SetFrameLevel(Minimap:GetFrameLevel() + 8)
+    b:SetNormalTexture("Interface\\Icons\\INV_Misc_GroupLooking")
+    b:GetNormalTexture():SetTexCoord(0.05, 0.95, 0.05, 0.95)
+    b:GetNormalTexture():ClearAllPoints()
+    b:GetNormalTexture():SetPoint("CENTER", b, "CENTER", 0, 0)
+    b:GetNormalTexture():SetSize(21, 21)
+    local ring = b:CreateTexture(nil, "OVERLAY")
+    ring:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
+    ring:SetSize(54, 54)
+    ring:SetPoint("TOPLEFT", b, "TOPLEFT", 0, 0)
+    b:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
+    b:RegisterForClicks("LeftButtonUp")
+    b:RegisterForDrag("LeftButton")
+    b:SetScript("OnMouseDown", function() b.dragged = nil end)
+    b:SetScript("OnClick", function() if not b.dragged then UI.Toggle() end end)
+    b:SetScript("OnHide", function() b:SetScript("OnUpdate", nil); b.dragged = nil; GameTooltip:Hide() end)
+    b:SetScript("OnEnter", function()
+        GameTooltip:SetOwner(b, "ANCHOR_LEFT")
+        GameTooltip:SetText("CWoW Companion Manager", 1, 0.82, 0)
+        GameTooltip:AddLine("Left-click to open or close.", 1, 1, 1)
+        GameTooltip:AddLine("Drag to move around the minimap.", 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    b:SetScript("OnDragStart", function()
+        b.dragged = true
+        GameTooltip:Hide()
+        b:SetScript("OnUpdate", function()
+            local x, y = GetCursorPosition()
+            local scale = Minimap:GetEffectiveScale()
+            local cx, cy = Minimap:GetCenter()
+            -- Use the standard Lua math library's radian angle.
+            C.db.minimapAngle = math.atan2(y / scale - cy, x / scale - cx) * 180 / math.pi
+            UI.PositionLauncher()
+        end)
+    end)
+    b:SetScript("OnDragStop", function() b:SetScript("OnUpdate", nil) end)
+    UI.PositionLauncher()
+end
