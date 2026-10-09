@@ -1,4 +1,4 @@
--- Minimal explicit mock, not a simulation of protected actions or the WoW renderer.
+-- Explicit mock with a hardware-input boundary; not the real WoW security system or renderer.
 local function new(saved)
     local W = {time = 0, party = {}, leader = true, combat = false, raid = false,
         sent = {}, kicks = {}, frames = {}, chat = {}, menu = {}}
@@ -68,6 +68,7 @@ local function new(saved)
         W.sent[#W.sent + 1] = {...}
     end
     function UninviteUnit(name)
+        if not W.hardware then error("UninviteUnit requires a hardware event") end
         if W.kickError then error("mock protected action error") end
         W.kicks[#W.kicks + 1] = name
     end
@@ -77,7 +78,15 @@ local function new(saved)
     W.C = CWoWCompanionManager
     function W.event(event, ...)
         local f = W.C.events
+        local hardware = W.hardware
+        W.hardware = false
         f.scripts.OnEvent(f, event, ...)
+        W.hardware = hardware
+    end
+    function W.dismiss(name, guid)
+        W.hardware = true
+        W.C.Manager.Dismiss(name, guid)
+        W.hardware = false
     end
     function W.load()
         W.event("ADDON_LOADED", "CWoWCompanionManager")

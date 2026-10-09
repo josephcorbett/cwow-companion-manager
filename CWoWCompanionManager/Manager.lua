@@ -11,6 +11,7 @@ function M.ApplyRoster(rows)
     end
     M.rosterTime = GetTime()
     P.Scan()
+    M.rosterRevision = P.revision
     if P.complete then
         for key, recovery in pairs(M.recovery) do
             local row = M.roster[key]
@@ -236,36 +237,34 @@ function M.Dismiss(name, expectedGUID)
     local row = M.roster[key]
     if reason then C.Status(reason, "error"); return end
     if not row or not row.active then C.Status("Bot identity is not established. Refresh the roster.", "error"); return end
+    -- UninviteUnit must stay in the hardware-click call stack. A server reply
+    -- cannot continue that click. If evidence is stale, refresh only and require
+    -- another deliberate click; never schedule an uninvite from a callback.
+    if not M.rosterValid or not M.rosterTime or GetTime() - M.rosterTime > 15
+        or M.rosterRevision ~= P.revision then
+        C.Status("Refreshing bot identity before dismissal...")
+        M.ReadRoster(function(ok, err)
+            if ok then C.Status("Roster refreshed. Click Dismiss again to remove the companion.")
+            else C.Status(err, "error") end
+        end)
+        return
+    end
     local member = P.members[key]
-    local op = {kind = "dismiss", phase = "preflight", name = row.name, key = key,
+    local op = {kind = "dismiss", name = row.name, key = key,
         class = row.class, token = row.token, guid = member and member.guid or expectedGUID}
     M.operation = op
     C.Status("Dismissing " .. op.name .. "...")
-    -- Fresh, correlated '+' evidence is mandatory before any destructive API call.
-    M.ReadRoster(function(ok, err)
-        if M.operation ~= op then return end
-        if not ok then finish(op, err, "error"); return end
-        local fresh = M.roster[key]
-        if not fresh or not fresh.active then
-            finish(op, "This character is not confirmed as an active bot. No dismissal was attempted.", "error"); return
+    if member then
+        op.phase, op.eventSerial, op.deadline = "uninvite", P.eventSerial, GetTime() + 8
+        local success, failure = pcall(UninviteUnit, op.name)
+        if not success then
+            C.Debug(tostring(failure))
+            finish(op, "The client blocked party removal. No deactivation was sent. Refresh and try Dismiss again.", "error", true)
         end
-        local blocked = P.DismissReason(op.name, op.guid)
-        if blocked then finish(op, blocked, "error"); return end
-        local current = P.members[key]
-        if current then
-            -- An initially ungrouped target joining during preflight is still validated here.
-            op.guid = current.guid
-            op.phase, op.eventSerial, op.deadline = "uninvite", P.eventSerial, GetTime() + 8
-            local success, failure = pcall(UninviteUnit, op.name)
-            if not success then
-                C.Debug(tostring(failure))
-                finish(op, "The client could not remove the companion from the party.", "error", true)
-            end
-        else
-            op.leftParty = true
-            deactivate(op)
-        end
-    end)
+    else
+        op.leftParty = true
+        deactivate(op)
+    end
 end
 
 function M.OnPartyChange(rosterEvent)
@@ -279,6 +278,14 @@ function M.OnPartyChange(rosterEvent)
         M.VerifyJoin(op)
     end
     C.Changed()
+end
+
+function M.ActionBlocked(addon, action)
+    local op = M.operation
+    if op and op.phase == "uninvite" and type(action) == "string" and action:find("UninviteUnit", 1, true) then
+        C.Debug("Blocked party removal: " .. tostring(addon) .. " " .. action)
+        finish(op, "WoW blocked party removal. No deactivation was sent. Refresh and click Dismiss again.", "error", true)
+    end
 end
 
 function M.SystemMessage(message)

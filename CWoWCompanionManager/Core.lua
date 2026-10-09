@@ -35,6 +35,7 @@ events:SetScript("OnEvent", function(self, event, ...)
         M.ResetWorld()
     elseif event == "CHAT_MSG_ADDON" then C.Transport.Receive(...)
     elseif event == "CHAT_MSG_SYSTEM" then M.SystemMessage(...)
+    elseif event == "ADDON_ACTION_BLOCKED" or event == "ADDON_ACTION_FORBIDDEN" then M.ActionBlocked(...)
     elseif event == "UI_ERROR_MESSAGE" then
         if M.operation then
             local message = ...
@@ -66,7 +67,8 @@ events:SetScript("OnUpdate", function(self, elapsed)
     end
 end)
 for _, event in ipairs({"ADDON_LOADED", "PLAYER_ENTERING_WORLD", "PLAYER_LEAVING_WORLD", "CHAT_MSG_ADDON",
-    "CHAT_MSG_SYSTEM", "UI_ERROR_MESSAGE", "PARTY_MEMBERS_CHANGED", "RAID_ROSTER_UPDATE",
+    "CHAT_MSG_SYSTEM", "UI_ERROR_MESSAGE", "ADDON_ACTION_BLOCKED", "ADDON_ACTION_FORBIDDEN",
+    "PARTY_MEMBERS_CHANGED", "RAID_ROSTER_UPDATE",
     "PARTY_LEADER_CHANGED", "UNIT_NAME_UPDATE", "PLAYER_REGEN_ENABLED",
     "PLAYER_REGEN_DISABLED", "DISPLAY_SIZE_CHANGED"}) do
     local ok, err = pcall(events.RegisterEvent, events, event)

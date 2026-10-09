@@ -21,7 +21,7 @@ out.mkdir(exist_ok=True)
 archive = out / (ADDON + ".zip")
 with ZipFile(archive, "w", compression=ZIP_DEFLATED) as z:
     for path, relative in files:
-        info = ZipInfo(ADDON + "/" + relative, date_time=(2026, 10, 8, 0, 0, 0))
+        info = ZipInfo(ADDON + "/" + relative, date_time=(2026, 10, 9, 0, 0, 0))
         info.compress_type = ZIP_DEFLATED
         info.external_attr = 0o100644 << 16
         z.writestr(info, path.read_bytes())

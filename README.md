@@ -4,7 +4,7 @@ A small companion-management addon for **World of Warcraft 3.3.5a (interface 303
 
 Recruit a Mercenary by class, activate an existing character from the server roster, and dismiss identified bots from one Active Companions list. The addon uses AzerothCore's existing addon-message command channel; it requires no custom server module or external addon framework.
 
-**v0.1.0 is an initial beta.** Its diagnostic predecessor's transport, roster parsing, bot removal and party APIs were reported as successfully tested in game. The production UI, complete recruitment/dismissal workflows, and behavior on other server revisions still need the [manual test checklist](docs/MANUAL_TESTS.md). Local tests use mocks and do not establish gameplay compatibility. Real screenshots will be added after in-game validation.
+**v0.1.1 is a beta with a dismissal hotfix.** Its diagnostic predecessor's transport, roster parsing, bot removal and party APIs were reported as successfully tested in game. An initial production-client test reported successful alt recruitment and a blocked dismissal action in v0.1.0. This update moves party removal back onto the button click; that fix, full workflow coverage, and behavior on other server revisions still need the [manual test checklist](docs/MANUAL_TESTS.md). Local tests use mocks and do not establish gameplay compatibility. Real screenshots will be added after in-game validation.
 
 ## Features
 
@@ -29,7 +29,7 @@ The addon never creates characters, manages the server pool, changes server conf
 
 ## Installation
 
-1. Download **`CWoWCompanionManager.zip`** from the [v0.1.0 prerelease](https://github.com/josephcorbett/cwow-companion-manager/releases/tag/v0.1.0) or a newer compatible release. Use the addon asset rather than GitHub's automatic “Source code” archive.
+1. Download **`CWoWCompanionManager.zip`** from the [v0.1.1 prerelease](https://github.com/josephcorbett/cwow-companion-manager/releases/tag/v0.1.1) or a newer compatible release. Use the addon asset rather than GitHub's automatic “Source code” archive.
 2. Exit WoW and extract the ZIP into the client's `Interface/AddOns/` directory.
 3. Check that the manifest is directly at:
 
@@ -51,17 +51,19 @@ The release contains the manifest and `Shared.lua`, `Transport.lua`, `Party.lua`
 
 **Recruit an Alt:** select Alts, refresh if needed, then click Invite next to an inactive character. Activation already includes the server's party invitation; there is no second invitation action. “Active - not grouped” means the server reports the bot active but the local party does not contain it. You can inspect or dismiss it from the upper list rather than activating it again.
 
-**Dismiss:** click Dismiss next to an identified active bot. There is no confirmation dialog. The addon first re-queries the roster, validates identity and group permissions, and then uninvites if necessary. It sends `remove` only after observing a group change and verifying the target's absence. An already ungrouped active bot goes directly to deactivation after validation.
+**Dismiss:** click Dismiss next to an identified active bot. There is no confirmation dialog. The addon validates recent roster evidence, identity and group permissions, and calls `UninviteUnit` directly from the button click. If the last roster is older than 15 seconds, invalid, or from a different party composition, the first click only refreshes it and asks you to click Dismiss again. No uninvite runs from a server-response callback. It sends `remove` only after observing a group change and verifying the target's absence. An already ungrouped active bot goes directly to deactivation after validation.
 
 **Recover from an uncertain or partial result:** read the status message, click Refresh, and inspect both the game party and addon roster before trying again. If uninvite succeeded but deactivation failed, the bot can appear as active outside the party; a new deliberate Dismiss attempts only the remaining deactivation. No uncertain mutation is retried automatically. If a character is no longer reported as an active bot but still occupies a group slot, use normal game group controls after checking its identity; this beta will not guess that it is safe to kick.
 
 **Refresh and debug:** the Refresh button or `/cwow refresh` issues a read-only roster query when idle. `/cwow debug` toggles protocol diagnostics in the normal chat frame, off by default. The preference is saved. Debug may show character names and server messages; review logs before sharing them. Normal use is quiet, and the addon never filters the game's normal chat output.
 
+**Upgrading from v0.1.0:** replace the addon folder with the v0.1.1 files, type `/reload`, then `/cwow`. Click Refresh, wait for completion, and test Dismiss while out of combat and party leader. If asked, click Dismiss again after the identity refresh. If WoW still blocks removal, enable `/cwow debug` and retain the reported action name; do not keep repeating the command blindly.
+
 ## Bot identity and roster ambiguity
 
 The Playerbots roster is not a guaranteed account-character inventory. It can include controlled bots and some grouped random bots. The Alts tab therefore labels server status without claiming ownership; the server decides which inactive entries can be activated.
 
-Ordinary party members are not automatically treated as companions. A fresh correlated roster response must report a target active (`+`) before dismissal may execute. A grouped target must also have a resolvable matching GUID. Inactive entries, arbitrary whispers, greetings, class matches alone, and stale recruitment history never authorize a kick. Unmanaged group members are counted in a small note rather than given Dismiss buttons. Missing or malformed roster data disables destructive controls until refresh.
+Ordinary party members are not automatically treated as companions. A correlated roster response no older than 15 seconds, matching the current party composition, must report a target active (`+`) before dismissal may execute. A grouped target must also have a resolvable matching GUID. Inactive entries, arbitrary whispers, greetings, class matches alone, and stale recruitment history never authorize a kick. Unmanaged group members are counted in a small note rather than given Dismiss buttons. Missing or malformed roster data disables destructive controls until refresh.
 
 Recruitment attribution requires the expected Playerbots response, a subsequent active roster entry, and the newly observed party member. For Mercenaries the candidate must match the selected class, be newly active relative to preflight, and be the only matching new candidate. Concurrent ambiguous joins produce an uncertain result rather than an invented identity.
 

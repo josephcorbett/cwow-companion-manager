@@ -1,6 +1,6 @@
-# Live-client acceptance checklist — v0.1.0 beta
+# Live-client acceptance checklist — v0.1.1 beta
 
-**Not yet executed for the production addon.** Passing Lua tests is not a substitute. Use a normal player account as well as any administrator account used for comparison. Record client build, locale, UI scale, addon version, server/module revisions if available, initial party state and the result of each case. Do not include account names, credentials or private connection details in public reports.
+**Partial live feedback:** v0.1.0 successfully recruited an alt but hit a blocked dismissal action. The v0.1.1 fix and full checklist remain to be validated. Passing Lua tests is not a substitute. Use a normal player account as well as any administrator account used for comparison. Record client build, locale, UI scale, addon version, server/module revisions if available, initial party state and the result of each case. Do not include account names, credentials or private connection details in public reports.
 
 ## 1. Install and initialize
 
@@ -33,12 +33,12 @@
 
 ## 4. Dismissal and recovery
 
-1. With a known active bot and party leadership, click Dismiss once. No confirmation dialog is expected.
-2. Verify the order in debug output: fresh roster query, one `UninviteUnit`, actual group removal, one Playerbots remove request, then a roster verification query.
+1. With a known active bot and party leadership, click Refresh, wait for completion, then promptly click Dismiss. No confirmation dialog is expected. `UninviteUnit` must execute on that click without the blocked-addon message.
+2. Verify the order: recent roster evidence, one `UninviteUnit` during the click, actual group removal, one Playerbots remove request, then a roster verification query. Wait more than 15 seconds after refreshing and try again: the first click must only refresh and request another click. The response callback must not uninvite. Also test a party composition change between refresh and dismissal.
 3. Confirm the character has left the party and is no longer active before accepting the “dismissed” message.
 4. Dismiss an active bot already outside the party. There should be no uninvite and exactly one removal request after roster validation.
-5. Test ordinary humans, the player character, an inactive roster entry still in a party, and a target whose bot evidence disappears during preflight. No destructive action should execute without active bot evidence.
-6. Lose leadership or enter combat during preflight. The action should stop. In raids, removal should be refused.
+5. Test ordinary humans, the player character, an inactive roster entry still in a party, and a target whose bot evidence disappears between refresh and clicking Dismiss. No destructive action should execute without active bot evidence.
+6. Lose leadership or enter combat between refresh and clicking Dismiss. The action should stop. In raids, removal should be refused.
 7. If uninvite fails or cannot be observed, wait for timeout. The addon must not send remove. Refresh before trying again.
 8. If deactivation fails after successful uninvite, expect an explicit partial result. Refresh; if the bot is still active outside the group, deliberately Dismiss again. The addon must attempt only deactivation, not repeat the kick.
 9. If remove says OK but the roster still says active, or the character rejoins during verification, expect partial/unknown rather than success. No repeated kick should occur.
@@ -52,4 +52,4 @@
 4. Turn debug off; normal operation should be quiet and the setting should persist.
 5. Record each case as **passed**, **failed with evidence**, or **not tested**. Note real party state separately from response wording. File sanitized issues and attach real screenshots if available.
 
-After these tests pass on the intended client/server pair, a follow-up release can update validation claims. Until then, keep v0.1.0 marked as a prerelease.
+After these tests pass on the intended client/server pair, a follow-up release can update validation claims. Until then, keep v0.1.1 marked as a prerelease.

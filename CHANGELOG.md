@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.1.1 — 2026-10-09 (beta hotfix)
+
+- Fix grouped dismissal calling `UninviteUnit` from an asynchronous server response, which loses the hardware-click context and can produce “Interface action failed because of an AddOn.”
+- Execute party removal directly during the Dismiss click with recent, composition-matched roster evidence and existing identity/permission checks.
+- Stale evidence triggers a read-only refresh and requests another click; callbacks never uninvite.
+- Stop safely on reported blocked/forbidden uninvite actions without sending deactivation.
+- Add hardware-context regression tests; 37 cases and 246 assertions pass under Lua 5.1. The hotfix still requires an in-game retest.
+
 ## v0.1.0 — 2026-10-08 (beta)
 
 - Add a compact, movable Warcraft-style window with saved position and recruitment tab.
